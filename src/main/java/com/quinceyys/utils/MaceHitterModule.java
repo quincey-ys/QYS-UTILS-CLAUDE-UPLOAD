@@ -63,22 +63,14 @@ public final class MaceHitterModule {
         manualSlam(Minecraft.getInstance());
     }
 
-    public static void setEnabled(boolean value) {
-        enabled = value;
-        if (!value) {
-            if (jumpHeldByMod) {
-                Minecraft client = Minecraft.getInstance();
-                if (client != null) client.options.keyJump.setDown(false);
-                jumpHeldByMod = false;
-            }
-            currentTarget = null;
-        }
-        saveConfig();
-    }
-
     private static void onEndTick(Minecraft client) {
         while (toggleKey.consumeClick()) {
-            setEnabled(!enabled);
+            enabled = !enabled;
+            saveConfig();
+            if (!enabled) {
+                releaseJump(client);
+                currentTarget = null;
+            }
         }
 
         while (slamKey.consumeClick()) manualSlam(client);
@@ -89,7 +81,7 @@ public final class MaceHitterModule {
             return;
         }
 
-        currentTarget = findTarget(client, player, range);
+        currentTarget = findTarget(client, player);
         if (currentTarget == null) {
             releaseJump(client);
             delayCounter = 0;
@@ -123,7 +115,7 @@ public final class MaceHitterModule {
         if (delayCounter > 0) delayCounter--;
     }
 
-    private static Entity findTarget(Minecraft client, LocalPlayer player, double targetRange) {
+    private static Entity findTarget(Minecraft client, LocalPlayer player) {
         Entity best = null;
         double bestDistance = Double.MAX_VALUE;
 
@@ -134,7 +126,7 @@ public final class MaceHitterModule {
             if (entity instanceof Player other && ignoreTeammates && player.isAlliedTo(other)) continue;
 
             double distance = player.distanceTo(entity);
-            if (distance > targetRange || distance >= bestDistance) continue;
+            if (distance > range || distance >= bestDistance) continue;
             if (!ignoreWalls && !player.hasLineOfSight(entity)) continue;
 
             best = entity;
@@ -183,7 +175,7 @@ public final class MaceHitterModule {
 
         Entity target = currentTarget;
         if (target == null || !target.isAlive() || player.distanceTo(target) > slamRange) {
-            target = findTarget(client, player, slamRange);
+            target = findTarget(client, player);
         }
         if (target == null || player.distanceTo(target) > slamRange) return;
 

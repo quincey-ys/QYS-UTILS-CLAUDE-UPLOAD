@@ -75,15 +75,7 @@ public final class AutoTotemModule {
         }
 
         LocalPlayer player = client.player;
-        if (player == null || client.level == null) {
-            // Do not carry pending inventory swap state into another world/session.
-            reactionUntil = 0;
-            displacedSlot = -1;
-            swappedForSafety = false;
-            safeSince = -1L;
-            return;
-        }
-        if (!enabled || client.gameMode == null) return;
+        if (!enabled || player == null || client.level == null || client.gameMode == null) return;
         if (ignoreElytra && player.isFallFlying()) return;
 
         ticks++;
