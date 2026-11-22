@@ -156,7 +156,7 @@ public final class QysUtilsConfigScreen extends Screen {
 
     private void buildMaceHitterTab() {
         beginTab("MACE HITTER");
-        toggle("Mace Hitter Enabled", () -> MaceHitterModule.enabled, v -> MaceHitterModule.enabled = v);
+        toggle("Mace Hitter Enabled", () -> MaceHitterModule.enabled, MaceHitterModule::setEnabled);
         toggle("Players Only", () -> MaceHitterModule.playersOnly, v -> MaceHitterModule.playersOnly = v);
         toggle("Ignore Teammates", () -> MaceHitterModule.ignoreTeammates, v -> MaceHitterModule.ignoreTeammates = v);
         toggle("Ignore Walls", () -> MaceHitterModule.ignoreWalls, v -> MaceHitterModule.ignoreWalls = v);
