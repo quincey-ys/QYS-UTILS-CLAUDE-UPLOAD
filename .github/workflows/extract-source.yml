@@ -1,0 +1,32 @@
+name: Extract Claude source archive
+
+on:
+  push:
+    paths:
+      - ".github/workflows/extract-source.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract uploaded source ZIP
+        run: |
+          set -euo pipefail
+          mkdir -p extracted
+          unzip -q QYS-UTILS-source-with-macros.zip -d extracted
+          echo "Extracted files:"
+          find extracted -maxdepth 5 -type f -print | sort
+          cd extracted
+          zip -qr ../QYS-UTILS-extracted-source.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QYS-UTILS-extracted-source
+          path: QYS-UTILS-extracted-source.zip
+          if-no-files-found: error
+          retention-days: 7
