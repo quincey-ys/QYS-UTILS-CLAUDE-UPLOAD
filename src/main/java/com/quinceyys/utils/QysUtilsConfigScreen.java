@@ -156,7 +156,7 @@ public final class QysUtilsConfigScreen extends Screen {
 
     private void buildMaceHitterTab() {
         beginTab("MACE HITTER");
-        toggle("Mace Hitter Enabled", () -> MaceHitterModule.enabled, v -> MaceHitterModule.enabled = v);
+        toggle("Mace Hitter Enabled", () -> MaceHitterModule.enabled, MaceHitterModule::setEnabled);
         toggle("Players Only", () -> MaceHitterModule.playersOnly, v -> MaceHitterModule.playersOnly = v);
         toggle("Ignore Teammates", () -> MaceHitterModule.ignoreTeammates, v -> MaceHitterModule.ignoreTeammates = v);
         toggle("Ignore Walls", () -> MaceHitterModule.ignoreWalls, v -> MaceHitterModule.ignoreWalls = v);
@@ -345,7 +345,7 @@ public final class QysUtilsConfigScreen extends Screen {
     // -------------------------------------------------------------- rendering
 
     @Override
-    protected void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         graphics.fill(0, 0, this.width, this.height, 0xB8000000);
         fillSquircle(graphics, panelX, panelY, panelWidth, panelHeight, 18, 0xFF141923);
         graphics.fill(panelX + 18, panelY + 2, panelX + panelWidth - 18, panelY + 24, 0xFF293449);
