@@ -1,4 +1,4 @@
-name: Extract Claude source archive
+name: Inspect and build Claude source
 
 on:
   push:
@@ -10,36 +10,49 @@ permissions:
   contents: read
 
 jobs:
-  extract:
+  inspect-and-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Recursively unpack uploaded ZIP
+      - name: Unpack nested source archive
         run: |
           set -euo pipefail
           archive="$GITHUB_WORKSPACE/QYS-UTILS-source-with-macros.zip"
           mkdir -p extracted
-          for depth in 1 2 3 4 5; do
-            layer="$RUNNER_TEMP/layer-$depth"
+          for depth in $(seq 1 10); do
+            layer="$RUNNER_TEMP/unpack-$depth"
             mkdir -p "$layer"
             unzip -q "$archive" -d "$layer"
-            nested="$(find "$layer" -type f -name '*.zip' -print -quit)"
-            nonzip="$(find "$layer" -type f ! -name '*.zip' -print -quit)"
-            if [ -n "$nested" ] && [ -z "$nonzip" ]; then
+            nested="$(find "$layer" -type f -iname '*.zip' -print -quit)"
+            if [ -n "$nested" ]; then
+              find "$layer" -type f ! -iname '*.zip' -exec cp --parents {} extracted/ \;
               archive="$nested"
             else
               cp -a "$layer/." extracted/
               break
             fi
           done
-          echo "Final source inventory:"
+          echo "=== SOURCE INVENTORY ==="
           find extracted -maxdepth 10 -type f -print | sort
-          test -n "$(find extracted -type f -print -quit)"
-          cd extracted
-          zip -qr ../QYS-UTILS-extracted-source.zip .
-      - uses: actions/upload-artifact@v4
+          test -f extracted/build.gradle.kts
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
         with:
-          name: QYS-UTILS-extracted-source
-          path: QYS-UTILS-extracted-source.zip
+          distribution: temurin
+          java-version: '25'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.8.2'
+      - name: Build Claude source
+        working-directory: extracted
+        run: gradle build --no-daemon
+      - name: Upload JAR and sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: QYS-UTILS-Claude-source-build
+          path: |
+            extracted/build/libs/*.jar
+            extracted/CHANGES.md
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
