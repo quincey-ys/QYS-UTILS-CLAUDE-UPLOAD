@@ -201,8 +201,8 @@ public final class AutoTotemModule {
         if (player == null || client.gameMode == null) return;
 
         int slotId = inventoryIndex < 9 ? inventoryIndex + 36 : inventoryIndex;
-        client.gameMode.handleInventoryMouseClick(
-                player.inventoryMenu.containerId, slotId, 40, ClickType.SWAP, player
+        client.gameMode.handleContainerInput(
+                player.inventoryMenu.containerId, slotId, 40, ContainerInput.SWAP, player
         );
     }
 
