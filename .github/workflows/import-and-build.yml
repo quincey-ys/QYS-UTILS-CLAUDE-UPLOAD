@@ -38,6 +38,8 @@ jobs:
           echo "Imported project from $PROJECT_DIR"
           test -f build.gradle.kts -o -f build.gradle
           test -f gradle.properties
+          # Preserve this workflow; the imported workflow needs separate write permission.
+          rm -f .github/workflows/build.yml
 
       - name: Commit extracted project to this branch
         run: |
