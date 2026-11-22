@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "qys_utils",
-  "version": "\${version}",
+  "version": "${version}",
   "name": "QYS-UTILS",
   "description": "Unified standalone Fabric client utilities: AutoTotem and Mace Hitter.",
   "authors": ["quincey-ys"],
@@ -13,7 +13,7 @@
   },
   "depends": {
     "java": ">=25",
-    "minecraft": "\${mc_compat}",
+    "minecraft": "${mc_compat}",
     "fabricloader": ">=0.20.1",
     "fabric-api": "*"
   }
