@@ -44,7 +44,7 @@ public final class CrystalMacroModule {
 
     private static final List<Pending> PENDING = new ArrayList<>();
     private static int tickCounter;
-    private static int lastPlacementAttemptTick = Integer.MIN_VALUE;
+    private static int lastPlacementAttemptTick = -1000;
 
     private CrystalMacroModule() {}
 
@@ -82,7 +82,7 @@ public final class CrystalMacroModule {
             saveConfig();
             if (!enabled) {
                 PENDING.clear();
-                lastPlacementAttemptTick = Integer.MIN_VALUE;
+                lastPlacementAttemptTick = -1000;
             }
         }
 
