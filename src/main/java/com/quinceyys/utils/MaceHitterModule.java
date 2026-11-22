@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.util.InputConstants;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -63,14 +63,22 @@ public final class MaceHitterModule {
         manualSlam(Minecraft.getInstance());
     }
 
+    public static void setEnabled(boolean value) {
+        enabled = value;
+        if (!value) {
+            if (jumpHeldByMod) {
+                Minecraft client = Minecraft.getInstance();
+                if (client != null) client.options.keyJump.setDown(false);
+                jumpHeldByMod = false;
+            }
+            currentTarget = null;
+        }
+        saveConfig();
+    }
+
     private static void onEndTick(Minecraft client) {
         while (toggleKey.consumeClick()) {
-            enabled = !enabled;
-            saveConfig();
-            if (!enabled) {
-                releaseJump(client);
-                currentTarget = null;
-            }
+            setEnabled(!enabled);
         }
 
         while (slamKey.consumeClick()) manualSlam(client);
@@ -81,7 +89,7 @@ public final class MaceHitterModule {
             return;
         }
 
-        currentTarget = findTarget(client, player);
+        currentTarget = findTarget(client, player, range);
         if (currentTarget == null) {
             releaseJump(client);
             delayCounter = 0;
@@ -115,7 +123,7 @@ public final class MaceHitterModule {
         if (delayCounter > 0) delayCounter--;
     }
 
-    private static Entity findTarget(Minecraft client, LocalPlayer player) {
+    private static Entity findTarget(Minecraft client, LocalPlayer player, double targetRange) {
         Entity best = null;
         double bestDistance = Double.MAX_VALUE;
 
@@ -126,7 +134,7 @@ public final class MaceHitterModule {
             if (entity instanceof Player other && ignoreTeammates && player.isAlliedTo(other)) continue;
 
             double distance = player.distanceTo(entity);
-            if (distance > range || distance >= bestDistance) continue;
+            if (distance > targetRange || distance >= bestDistance) continue;
             if (!ignoreWalls && !player.hasLineOfSight(entity)) continue;
 
             best = entity;
@@ -175,7 +183,7 @@ public final class MaceHitterModule {
 
         Entity target = currentTarget;
         if (target == null || !target.isAlive() || player.distanceTo(target) > slamRange) {
-            target = findTarget(client, player);
+            target = findTarget(client, player, slamRange);
         }
         if (target == null || player.distanceTo(target) > slamRange) return;
 
