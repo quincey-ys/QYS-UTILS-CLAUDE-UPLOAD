@@ -32,9 +32,28 @@ jobs:
               break
             fi
           done
-          echo "=== SOURCE INVENTORY ==="
-          find extracted -maxdepth 10 -type f -print | sort
           test -f extracted/build.gradle.kts
+      - name: Patch known 26.3 API migrations
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          root = Path("extracted/src/main/java/com/quinceyys/utils")
+          for p in root.glob("*.java"):
+              s = p.read_text()
+              s = s.replace("import net.minecraft.client.util.InputConstants;", "import com.mojang.blaze3d.platform.InputConstants;")
+              s = s.replace("player.swing(InteractionHand.MAIN_HAND);", "")
+              p.write_text(s)
+          p = root / "QysUtilsConfigScreen.java"
+          p.write_text(p.read_text().replace("    protected void extractBackground(", "    public void extractBackground("))
+          p = root / "AutoTotemModule.java"
+          s = p.read_text()
+          s = s.replace("import net.minecraft.world.inventory.ClickType;", "import net.minecraft.world.inventory.ContainerInput;")
+          s = s.replace("float projected = player.fallDistance - (float) player.getDeltaMovement().y;", "double projected = player.fallDistance - player.getDeltaMovement().y;")
+          s = s.replace("client.gameMode.handleInventoryMouseClick(\n                player.inventoryMenu.containerId, slotId, 40, ClickType.SWAP, player\n        );", "client.gameMode.handleContainerInput(\n                player.inventoryMenu.containerId, slotId, 40, ContainerInput.SWAP, player\n        );")
+          p.write_text(s)
+          PY
+          echo "Applied 26.3 import, inventory, swing, numeric and screen-access fixes."
       - name: Set up Java 25
         uses: actions/setup-java@v5
         with:
