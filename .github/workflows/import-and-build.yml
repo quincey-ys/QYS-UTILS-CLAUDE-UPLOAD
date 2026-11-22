@@ -23,7 +23,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/qys-wrapper /tmp/qys-source
+          if [ -f build.gradle.kts ] || [ -f build.gradle ]; then
+            echo "Source tree already imported; preserving fixes."
+          else
+            mkdir -p /tmp/qys-wrapper /tmp/qys-source
           unzip -q files.zip -d /tmp/qys-wrapper
           SOURCE_ZIP="$(find /tmp/qys-wrapper -type f -name 'QYS-UTILS-fixed-source.zip' -print -quit)"
           test -n "$SOURCE_ZIP"
@@ -40,6 +43,7 @@ jobs:
           test -f gradle.properties
           # Preserve this workflow; the imported workflow needs separate write permission.
           rm -f .github/workflows/build.yml
+          fi
 
       - name: Commit extracted project to this branch
         run: |
