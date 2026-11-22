@@ -53,7 +53,6 @@ jobs:
           s = s.replace("client.gameMode.handleInventoryMouseClick(\n                player.inventoryMenu.containerId, slotId, 40, ClickType.SWAP, player\n        );", "client.gameMode.handleContainerInput(\n                player.inventoryMenu.containerId, slotId, 40, ContainerInput.SWAP, player\n        );")
           p.write_text(s)
           PY
-          echo "Applied 26.3 import, inventory, swing, numeric and screen-access fixes."
       - name: Set up Java 25
         uses: actions/setup-java@v5
         with:
@@ -66,6 +65,29 @@ jobs:
       - name: Build Claude source
         working-directory: extracted
         run: gradle build --no-daemon
+      - name: Fix Fabric mod metadata in distributable JAR
+        run: |
+          python3 - <<'PY'
+          import json, zipfile, tempfile, os
+          from pathlib import Path
+          jar = Path("extracted/build/libs/QYS-UTILS.jar")
+          tmp = jar.with_suffix(".fixed.jar")
+          with zipfile.ZipFile(jar, "r") as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
+              for item in zin.infolist():
+                  data = zin.read(item.filename)
+                  if item.filename == "fabric.mod.json":
+                      meta = json.loads(data)
+                      meta["version"] = "1.0.0+26.3"
+                      meta["depends"]["minecraft"] = "~26.3"
+                      data = (json.dumps(meta, indent=2) + "\n").encode()
+                  zout.writestr(item, data)
+          os.replace(tmp, jar)
+          with zipfile.ZipFile(jar) as z:
+              meta = json.loads(z.read("fabric.mod.json"))
+              assert meta["version"] == "1.0.0+26.3"
+              assert meta["depends"]["minecraft"] == "~26.3"
+              assert meta["depends"]["fabricloader"] == ">=0.20.1"
+          PY
       - name: Upload JAR and sources
         uses: actions/upload-artifact@v4
         with:
