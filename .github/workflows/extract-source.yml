@@ -8,20 +8,26 @@ on:
 
 permissions:
   contents: read
-  actions: write
 
 jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extract uploaded source ZIP
+      - name: Extract uploaded source ZIP (including nested ZIP)
         run: |
           set -euo pipefail
-          mkdir -p extracted
-          unzip -q QYS-UTILS-source-with-macros.zip -d extracted
-          echo "Extracted files:"
-          find extracted -maxdepth 5 -type f -print | sort
+          mkdir -p staging extracted
+          unzip -q QYS-UTILS-source-with-macros.zip -d staging
+          nested="$(find staging -type f -name '*.zip' -print -quit)"
+          if [ -n "$nested" ]; then
+            unzip -q "$nested" -d extracted
+          else
+            cp -a staging/. extracted/
+          fi
+          echo "Source file inventory:"
+          find extracted -maxdepth 8 -type f -print | sort
+          test -n "$(find extracted -type f -print -quit)"
           cd extracted
           zip -qr ../QYS-UTILS-extracted-source.zip .
       - uses: actions/upload-artifact@v4
