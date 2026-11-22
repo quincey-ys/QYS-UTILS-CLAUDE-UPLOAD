@@ -14,19 +14,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extract uploaded source ZIP (including nested ZIP)
+      - name: Recursively unpack uploaded ZIP
         run: |
           set -euo pipefail
-          mkdir -p staging extracted
-          unzip -q QYS-UTILS-source-with-macros.zip -d staging
-          nested="$(find staging -type f -name '*.zip' -print -quit)"
-          if [ -n "$nested" ]; then
-            unzip -q "$nested" -d extracted
-          else
-            cp -a staging/. extracted/
-          fi
-          echo "Source file inventory:"
-          find extracted -maxdepth 8 -type f -print | sort
+          archive="$GITHUB_WORKSPACE/QYS-UTILS-source-with-macros.zip"
+          mkdir -p extracted
+          for depth in 1 2 3 4 5; do
+            layer="$RUNNER_TEMP/layer-$depth"
+            mkdir -p "$layer"
+            unzip -q "$archive" -d "$layer"
+            nested="$(find "$layer" -type f -name '*.zip' -print -quit)"
+            nonzip="$(find "$layer" -type f ! -name '*.zip' -print -quit)"
+            if [ -n "$nested" ] && [ -z "$nonzip" ]; then
+              archive="$nested"
+            else
+              cp -a "$layer/." extracted/
+              break
+            fi
+          done
+          echo "Final source inventory:"
+          find extracted -maxdepth 10 -type f -print | sort
           test -n "$(find extracted -type f -print -quit)"
           cd extracted
           zip -qr ../QYS-UTILS-extracted-source.zip .
