@@ -28,7 +28,10 @@ jobs:
           SOURCE_ZIP="$(find /tmp/qys-wrapper -type f -name 'QYS-UTILS-fixed-source.zip' -print -quit)"
           test -n "$SOURCE_ZIP"
           unzip -q "$SOURCE_ZIP" -d /tmp/qys-source
-          BUILD_FILE="$(find /tmp/qys-source -type f \\( -name 'build.gradle.kts' -o -name 'build.gradle' \\) -print -quit)"
+          BUILD_FILE="$(find /tmp/qys-source -type f -name 'build.gradle.kts' -print -quit)"
+          if [ -z "$BUILD_FILE" ]; then
+            BUILD_FILE="$(find /tmp/qys-source -type f -name 'build.gradle' -print -quit)"
+          fi
           test -n "$BUILD_FILE"
           PROJECT_DIR="$(dirname "$BUILD_FILE")"
           cp -a "$PROJECT_DIR"/. .
